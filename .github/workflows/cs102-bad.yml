@@ -1,42 +1,26 @@
-name: Bad CI/CD Pipeline
+name: Bad CI/CD
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: npm install
 
+      - name: Run tests
+        run: npm run test
+
       - name: Build the project
         run: npm run build
 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Run tests
-        run: npm test
-
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Deploy to server
+      - name: Deploy the project
         run: |
-          echo "Deploying to production..."
-          scp -r ./dist/* user@server:/var/www/html/
+          echo "Deploying the project..."

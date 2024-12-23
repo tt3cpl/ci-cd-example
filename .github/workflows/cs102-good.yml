@@ -1,9 +1,6 @@
-name: Good CI/CD Pipeline
+name: Good CI/CD
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main
@@ -11,54 +8,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      dist_path: ${{ steps.build.outputs.dist_path }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Cache node_modules
+        uses: actions/cache@v2
         with:
-          node-version: '16'
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Lint the code
-        run: npm run lint 
-
-      - name: Build the project
-        run: npm run build
-        id: build
-
-      - name: Save build artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-artifacts
-          path: dist/
-
-  test:
-    runs-on: ubuntu-latest
-    needs: build 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm install
 
       - name: Run tests
-        run: npm test
+        run: npm run test
 
   deploy:
+    needs: build
     runs-on: ubuntu-latest
-    needs: test
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Deploy to server
+      - name: Deploy the project
         run: |
-          echo "Deploying to production..."
-          scp -i ${{ secrets.SSH_PRIVATE_KEY }} -r ./dist/* user@server:/var/www/html/
+          echo "Deploying the project..."
+        env:
+          DEPLOY_SECRET: ${{ secrets.DEPLOY_SECRET }}
